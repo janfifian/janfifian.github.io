@@ -121,8 +121,8 @@ function processData(parsedData, plot_minimum_times) {
             // Plotting minimum times if the flag is set
             if (plot_minimum_times) {
                 const trace1 = {
-                    x: [row.finish_time, shiftDatetime(row.finish_time, instance.min_crew_conn_time)],
-                    y: [row.end_location, row.end_location],
+                    x: [shiftDatetime(row.start_time, -instance.min_crew_conn_time), row.start_time],
+                    y: [row.start_location, row.start_location],
                     mode: "lines",
                     line: {
                         width: 3,
@@ -135,8 +135,8 @@ function processData(parsedData, plot_minimum_times) {
                 lines.push(trace1);
 
                 const trace2 = {
-                    x: [row.finish_time, shiftDatetime(row.finish_time, row.mgtw)],
-                    y: [row.end_location - 0.05, row.end_location - 0.05],
+                    x: [shiftDatetime(row.start_time, -row.mgtw), row.start_time],
+                    y: [row.start_location - 0.05, row.start_location - 0.05],
                     mode: "lines",
                     line: {
                         width: 4,
