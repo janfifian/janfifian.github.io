@@ -1,0 +1,284 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload and Parse</title>
+    <script src="https://cdn.plot.ly/plotly-2.33.0.min.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.6/dayjs.min.js"></script>
+
+    </head>
+    <body>
+    <div id="gd"></div>
+    <h1>Fetching CSV from External Source</h1>
+    <pre id="output"></pre>
+    <div id="plotDiv" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+    <script>
+        // URL to the external CSV file
+        const csvUrl = 'https://raw.githubusercontent.com/quantumz-io/WebpageVisualisationTools/refs/heads/master/initial_schedule.csv?token=GHSAT0AAAAAACPRH5XJ7LVC2FRJRDHV4RKIZX3T5XQ';  // Replace with the actual URL
+
+        function shiftDatetime(start, shift) {
+            const shiftedTime = dayjs(start).add(shift, 'minute');
+            return shiftedTime.format(); // This returns the shifted time in ISO format
+        }
+        const custom_palette = [
+            'rgb(26, 51, 128)',    // Dark Blue (0.1, 0.2, 0.5 in 0-255 range)
+            'rgb(204, 26, 26)',    // Red (0.8, 0.1, 0.1)
+            'rgb(51, 204, 51)',    // Green (0.2, 0.8, 0.2)
+            'rgb(230, 153, 26)',   // Orange (0.9, 0.6, 0.1)
+            'rgb(153, 26, 153)',   // Purple (0.6, 0.1, 0.6)
+            'rgb(51, 179, 179)',   // Teal (0.2, 0.7, 0.7)
+            'rgb(26, 26, 26)'      // Black-ish (0.1, 0.1, 0.1)
+        ];
+        const instance = {
+            min_crew_conn_time: 30,  // Minutes
+            rp_start: "2006-01-07T08:45"  // DateTime format suitable for Plotly
+        };
+        const additional_palette = [
+            'rgb(230, 26, 179)',   // Light Gay (0.9, 0.1, 0.7)
+            'rgb(128, 204, 26)',   // Lime Green (0.5, 0.8, 0.1)
+            'rgb(230, 77, 51)',    // Coral (0.9, 0.3, 0.2)
+            'rgb(77, 102, 179)',   // Slate Blue (0.3, 0.4, 0.7)
+            'rgb(179, 77, 230)',   // Lavender (0.7, 0.3, 0.9)
+            'rgb(51, 204, 77)',    // Mustard Yellow (0.2, 0.8, 0.3)
+            'rgb(153, 230, 204)'   // Pale Turquoise (0.6, 0.9, 0.8)
+        ];
+
+        const MGT_colour = 'rgb(150, 77, 0)';    // MGT Colour (0.59, 0.3, 0.0)
+        const MCCT_colour = 'rgb(97, 140, 156)'; // MCCT Colour (0.38, 0.55, 0.61)
+
+        // Fetch the CSV file from the external URL
+        let data;  // Declare data in a higher scope
+
+fetch(csvUrl)
+    .then(response => response.text())  // Get the CSV as text
+    .then(csvText => {
+        Papa.parse(csvText, {  // Parse the CSV text, not a file object
+            header: true,  // Read header row
+            complete: function(results) {
+                data = results.data.map(row => {
+                    // Assuming 'start_time' and 'finish_time' are your datetime columns
+                    row.start_time = dayjs(row.start_time).toDate();
+                    row.finish_time = dayjs(row.finish_time).toDate();  
+                    return row;
+                });
+                console.log(data)
+                // You can now use `data` here or in any other function
+                processData(data, true);  // Example function to process the data
+            },
+            error: function(err) {
+                console.error("Error parsing CSV:", err);
+            }
+        });
+    })
+    .catch(err => console.error("Error fetching the CSV file:", err));
+
+// Example function to process the data outside Papa.parse()
+function processData(parsedData, plot_minimum_times) {
+            const lines = [];
+            const total_annotations = [];
+            const vertical_shift = 5; // Assuming a vertical shift value
+            console.log(`Flights to plot: ${data.length}.`);
+
+        data.forEach((row, indexing) => {
+            console.log(row);
+            if (row.flight_idx === '') {
+                return; // Exit the loop
+            }
+            // First flight trace
+            const plotRow = {
+                x: [row.start_time, row.finish_time],
+                y: [row.start_location, row.end_location],
+                name: `Flight ${row.flight_idx}, aircraft ${row.ac_type}, team ${row.team}`,
+                mode: "lines+markers",
+                marker: { symbol: "circle" },
+                line: {
+                    width: 2,
+                    color: custom_palette[(row.ac_type % custom_palette.length)]
+                },
+                legendgroup: `group_${row.flight_idx}`
+            };
+            lines.push(plotRow);
+
+            // Flight trace with additional styling for teams
+            const color_to_plot_row_team = additional_palette[(row.team % additional_palette.length)];
+            const flightTrace2 = {
+                x: [
+                    shiftDatetime(row.start_time, vertical_shift), 
+                    shiftDatetime(row.finish_time, vertical_shift)
+                ],
+                y: [row.start_location, row.end_location],
+                mode: "lines",
+                line: {
+                    width: 2,
+                    color: color_to_plot_row_team,
+                    dash: "20px,3px"
+                },
+                showlegend: false,
+                legendgroup: `group_${row.flight_idx}`
+            };
+            lines.push(flightTrace2);
+
+            // Plotting minimum times if the flag is set
+            if (plot_minimum_times) {
+                const trace1 = {
+                    x: [row.finish_time, shiftDatetime(row.finish_time, instance.min_crew_conn_time)],
+                    y: [row.end_location, row.end_location],
+                    mode: "lines",
+                    line: {
+                        width: 3,
+                        color: MCCT_colour
+                    },
+                    opacity: 0.7,
+                    showlegend: false,
+                    legendgroup: `group_${row.flight_idx}`
+                };
+                lines.push(trace1);
+
+                const trace2 = {
+                    x: [row.finish_time, shiftDatetime(row.finish_time, row.mgtw)],
+                    y: [row.end_location - 0.05, row.end_location - 0.05],
+                    mode: "lines",
+                    line: {
+                        width: 4,
+                        color: MGT_colour
+                    },
+                    opacity: 0.5,
+                    showlegend: false,
+                    legendgroup: `group_${row.flight_idx}`
+                };
+                lines.push(trace2);
+            }
+
+            // Handling delay scenario
+            if (row.dt > 0.0) {
+                // Flight before delay trace
+                const trace3 = {
+                    x: [row.predt_start_time, row.predt_finish_time],
+                    y: [row.start_location, row.end_location],
+                    mode: "lines+markers",
+                    name: `Flight id ${row.flight_idx} before delay`,
+                    line: {
+                        width: 2,
+                        dash: "dash",
+                        color: custom_palette[(row.ac_type % custom_palette.length)]
+                    },
+                    marker: { symbol: "circle" },
+                    opacity: 0.6,
+                    showlegend: false,
+                    legendgroup: `group_${row.flight_idx}`
+                };
+                lines.push(trace3);
+
+                // Additional delay-related traces
+                const trace4 = {
+                    x: [row.predt_start_time, row.start_time],
+                    y: [row.start_location, row.start_location],
+                    mode: "lines+markers",
+                    line: {
+                        width: 2,
+                        dash: "dot",
+                        color: custom_palette[(row.ac_type % custom_palette.length)]
+                    },
+                    marker: { symbol: "circle" },
+                    opacity: 0.6,
+                    showlegend: false,
+                    legendgroup: `group_${row.flight_idx}`
+                };
+                lines.push(trace4);
+
+                const trace5 = {
+                    x: [row.predt_finish_time, row.finish_time],
+                    y: [row.end_location, row.end_location],
+                    mode: "lines+markers",
+                    line: {
+                        width: 2,
+                        dash: "dot",
+                        color: custom_palette[(row.ac_type % custom_palette.length)]
+                    },
+                    marker: { symbol: "circle" },
+                    opacity: 0.6,
+                    showlegend: false,
+                    legendgroup: `group_${row.flight_idx}`
+                };
+                lines.push(trace5);
+
+                // Adding annotations for delayed flights
+                const annotations1 = {
+                    x: shiftDatetime(row.start_time, -5),
+                    y: row.start_location,
+                    ax: row.start_time,
+                    ay: row.start_location,
+                    arrowhead: 2,
+                    arrowsize: 1,
+                    arrowwidth: 2,
+                    arrowcolor: custom_palette[(row.ac_type % custom_palette.length)]
+                };
+                total_annotations.push(annotations1);
+
+                const annotations2 = {
+                    x: shiftDatetime(row.finish_time, -5),
+                    y: row.end_location,
+                    ax: row.finish_time,
+                    ay: row.end_location,
+                    arrowhead: 2,
+                    arrowsize: 1,
+                    arrowwidth: 2,
+                    arrowcolor: custom_palette[(row.ac_type % custom_palette.length)]
+                };
+                total_annotations.push(annotations2);
+            }
+        });
+
+        const startOfDay = new Date('2006-01-07T06:00:00'); // Start of the day
+        const endOfDay = new Date('2006-01-07T23:00:00');   // Start of the next day (exclusive)
+
+        // Layout customization for the plot
+        const layout = {
+            height: 600,
+            width: 1100,
+            xaxis: {
+                title: "Time",
+                tickangle: 45,
+                showgrid: true,
+                gridcolor: "lightgray",
+                gridwidth: 1,
+                range: [startOfDay, endOfDay] // Restrict the x-axis to one day
+            },
+            yaxis: {
+                title: "Location",
+                tickvals: Array.from(new Set([...data.map(d => d.start_location), ...data.map(d => d.end_location)])),
+                showgrid: true,
+                gridcolor: "lightgray",
+                gridwidth: 1
+            },
+            title: "Time-Space Diagram for aircrafts.",
+            legend: {
+                orientation: "v",
+                x: 1.3,
+                y: 1.4,
+                tracegroupgap: 2,
+                xanchor: "right",
+                valign: "top"
+            },
+            annotations: total_annotations,
+            shapes: [{
+                type: "line",
+                x0: instance.rp_start,
+                x1: instance.rp_start,
+                yref: "paper",
+                y0: 0,
+                y1: 1,
+                line: {
+                    color: "red",
+                    dash: "dot",
+                    width: 2
+                }
+            }]
+        };
+
+        // Create the plot using Plotly.js
+        Plotly.newPlot('plotDiv', lines, layout);
+    }
+
+    </script>
+    </body>
