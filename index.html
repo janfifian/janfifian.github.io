@@ -1,7 +1,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Upload and Parse</title>
+    <title>Time-Space Diagram for aircrafts and crews.</title>
     <script src="https://cdn.plot.ly/plotly-2.33.0.min.js" charset="utf-8"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.6/dayjs.min.js"></script>
@@ -9,12 +9,12 @@
     </head>
     <body>
     <div id="gd"></div>
-    <h1>Fetching CSV from External Source</h1>
+    <h1>Time-Space Diagram for aircrafts and crews for exemplary, simplified instance:</h1>
     <pre id="output"></pre>
     <div id="plotDiv" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
     <script>
         // URL to the external CSV file
-        const csvUrl = 'https://raw.githubusercontent.com/quantumz-io/WebpageVisualisationTools/refs/heads/master/initial_schedule.csv?token=GHSAT0AAAAAACPRH5XJ7LVC2FRJRDHV4RKIZX3T5XQ';  // Replace with the actual URL
+        const csvUrl = 'https://raw.githubusercontent.com/janfifian/janfifian.github.io/refs/heads/main/initial_schedule.csv';  // Replace with the actual URL
 
         function shiftDatetime(start, shift) {
             const shiftedTime = dayjs(start).add(shift, 'minute');
@@ -31,7 +31,7 @@
         ];
         const instance = {
             min_crew_conn_time: 30,  // Minutes
-            rp_start: "2006-01-07T08:45"  // DateTime format suitable for Plotly
+            rp_start: "2006-01-07T06:00"  // DateTime format suitable for Plotly
         };
         const additional_palette = [
             'rgb(230, 26, 179)',   // Light Gay (0.9, 0.1, 0.7)
