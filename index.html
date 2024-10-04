@@ -9,12 +9,17 @@
     </head>
     <body>
     <div id="gd"></div>
-    <h1>Time-Space Diagram for aircrafts and crews for exemplary, simplified instance:</h1>
+    <h1>Time-Space Diagram for aircrafts and crews for exemplary, simplified instance before disruption</h1>
     <pre id="output"></pre>
     <div id="plotDiv" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+    <h1>Time-Space Diagram for aircrafts and crews for exemplary, simplified instance after disruption:</h1>
+    <div id="plotDiv2" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+    <h1>Time-Space Diagram for aircrafts and crews for solution:</h1>
+    <div id="plotDiv3" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
     <script>
         // URL to the external CSV file
         const csvUrl = 'https://raw.githubusercontent.com/janfifian/janfifian.github.io/refs/heads/main/initial_schedule.csv';  // Replace with the actual URL
+        const csvUrl2 = 'https://raw.githubusercontent.com/janfifian/janfifian.github.io/refs/heads/main/resulting_schedule.csv';
 
         function shiftDatetime(start, shift) {
             const shiftedTime = dayjs(start).add(shift, 'minute');
@@ -63,7 +68,33 @@ fetch(csvUrl)
                 });
                 console.log(data)
                 // You can now use `data` here or in any other function
-                processData(data, true);  // Example function to process the data
+                processData(data, true, true);  // Example function to process the data
+                processData(data, true, false); 
+            },
+            error: function(err) {
+                console.error("Error parsing CSV:", err);
+            }
+        });
+    })
+    .catch(err => console.error("Error fetching the CSV file:", err));
+
+fetch(csvUrl2)
+    .then(response => response.text())  // Get the CSV as text
+    .then(csvText => {
+        Papa.parse(csvText, {  // Parse the CSV text, not a file object
+            header: true,  // Read header row
+            complete: function(results) {
+                data = results.data.map(row => {
+                    // Assuming 'start_time' and 'finish_time' are your datetime columns
+                    row.start_time = dayjs(row.start_time).toDate();
+                    row.finish_time = dayjs(row.finish_time).toDate();  
+                    console.log(`Row: ${JSON.stringify(row)}, is_cancelled: ${row.is_cancelled}`);
+                    row.cancelled = (row.cancelled==='true');
+                    return row;
+                });
+                console.log(data)
+                // You can now use `data` here or in any other function
+                processDataD(data, true);  // Example function to process the data
             },
             error: function(err) {
                 console.error("Error parsing CSV:", err);
@@ -73,11 +104,15 @@ fetch(csvUrl)
     .catch(err => console.error("Error fetching the CSV file:", err));
 
 // Example function to process the data outside Papa.parse()
-function processData(parsedData, plot_minimum_times) {
+function processData(parsedData, plot_minimum_times, original) {
             const lines = [];
             const total_annotations = [];
             const vertical_shift = 5; // Assuming a vertical shift value
             console.log(`Flights to plot: ${data.length}.`);
+            const used_team_labels = new Set();
+            const used_ac_labels = new Set();
+            var mgt = true;
+            var mcct = true;
 
         data.forEach((row, indexing) => {
             console.log(row);
@@ -85,26 +120,36 @@ function processData(parsedData, plot_minimum_times) {
                 return; // Exit the loop
             }
             // First flight trace
+            const aclabel = `acgroup_${row.ac_type}`;
+            const showLegendAc = !used_ac_labels.has(aclabel);
             const plotRow = {
-                x: [row.start_time, row.finish_time],
+                x: [( original? row.predt_start_time : row.start_time), (original? row.predt_finish_time : row.finish_time)],
                 y: [row.start_location, row.end_location],
-                name: `Flight ${row.flight_idx}, aircraft ${row.ac_type}, team ${row.team}`,
+                name: `Aircraft: ${row.ac_type}`,
                 mode: "lines+markers",
                 marker: { symbol: "circle" },
                 line: {
                     width: 2,
                     color: custom_palette[(row.ac_type % custom_palette.length)]
                 },
-                legendgroup: `group_${row.flight_idx}`
+                legendgroup: aclabel,
+                showlegend: showLegendAc
             };
             lines.push(plotRow);
+                // If the label was not used, add it to the set
+            if (showLegendAc) {
+                used_ac_labels.add(aclabel);
+            }
+            const teamlabel = `teamgroup_${row.team}`; // Label based on team
 
+            // Check if the label has been used
+            const showLegendTeam = !used_team_labels.has(teamlabel);
             // Flight trace with additional styling for teams
             const color_to_plot_row_team = additional_palette[(row.team % additional_palette.length)];
             const flightTrace2 = {
                 x: [
-                    shiftDatetime(row.start_time, vertical_shift), 
-                    shiftDatetime(row.finish_time, vertical_shift)
+                    shiftDatetime(original? row.predt_start_time : row.start_time, vertical_shift), 
+                    shiftDatetime(original? row.predt_finish_time : row.finish_time, vertical_shift)
                 ],
                 y: [row.start_location, row.end_location],
                 mode: "lines",
@@ -113,15 +158,18 @@ function processData(parsedData, plot_minimum_times) {
                     color: color_to_plot_row_team,
                     dash: "20px,3px"
                 },
-                showlegend: false,
-                legendgroup: `group_${row.flight_idx}`
+                name: `Team: ${row.team}`,
+                showlegend: showLegendTeam,
+                legendgroup: teamlabel
             };
             lines.push(flightTrace2);
-
+            if (showLegendTeam) {
+                used_team_labels.add(teamlabel);
+            }
             // Plotting minimum times if the flag is set
             if (plot_minimum_times) {
                 const trace1 = {
-                    x: [shiftDatetime(row.start_time, -instance.min_crew_conn_time), row.start_time],
+                    x: [shiftDatetime(original? row.predt_start_time : row.start_time, -instance.min_crew_conn_time), original? row.predt_start_time : row.start_time],
                     y: [row.start_location, row.start_location],
                     mode: "lines",
                     line: {
@@ -129,13 +177,15 @@ function processData(parsedData, plot_minimum_times) {
                         color: MCCT_colour
                     },
                     opacity: 0.7,
-                    showlegend: false,
-                    legendgroup: `group_${row.flight_idx}`
+                    showlegend: mcct,
+                    legendgroup: `MCCT`,
+                    name: "Minimal Crew Connection Times (MCCT)"
                 };
+                mcct = false;
                 lines.push(trace1);
 
                 const trace2 = {
-                    x: [shiftDatetime(row.start_time, -row.mgtw), row.start_time],
+                    x: [shiftDatetime(original? row.predt_start_time : row.start_time, -row.mgtw), original? row.predt_start_time : row.start_time],
                     y: [row.start_location - 0.05, row.start_location - 0.05],
                     mode: "lines",
                     line: {
@@ -143,14 +193,16 @@ function processData(parsedData, plot_minimum_times) {
                         color: MGT_colour
                     },
                     opacity: 0.5,
-                    showlegend: false,
-                    legendgroup: `group_${row.flight_idx}`
+                    showlegend: mgt,
+                    legendgroup: `MGT`,
+                    name: "Minimal Ground Times (MGT)"
                 };
+                mgt = false;
                 lines.push(trace2);
             }
 
             // Handling delay scenario
-            if (row.dt > 0.0) {
+            if (row.dt > 0.0 & !original) {
                 // Flight before delay trace
                 const trace3 = {
                     x: [row.predt_start_time, row.predt_finish_time],
@@ -165,7 +217,7 @@ function processData(parsedData, plot_minimum_times) {
                     marker: { symbol: "circle" },
                     opacity: 0.6,
                     showlegend: false,
-                    legendgroup: `group_${row.flight_idx}`
+                    legendgroup: `acgroup_${row.ac_type}`
                 };
                 lines.push(trace3);
 
@@ -182,7 +234,7 @@ function processData(parsedData, plot_minimum_times) {
                     marker: { symbol: "circle" },
                     opacity: 0.6,
                     showlegend: false,
-                    legendgroup: `group_${row.flight_idx}`
+                    legendgroup: `acgroup_${row.ac_type}`
                 };
                 lines.push(trace4);
 
@@ -198,7 +250,7 @@ function processData(parsedData, plot_minimum_times) {
                     marker: { symbol: "circle" },
                     opacity: 0.6,
                     showlegend: false,
-                    legendgroup: `group_${row.flight_idx}`
+                    legendgroup: `acgroup_${row.ac_type}`
                 };
                 lines.push(trace5);
 
@@ -229,7 +281,7 @@ function processData(parsedData, plot_minimum_times) {
             }
         });
 
-        const startOfDay = new Date('2006-01-07T06:00:00'); // Start of the day
+        const startOfDay = new Date('2006-01-07T05:00:00'); // Start of the day
         const endOfDay = new Date('2006-01-07T23:00:00');   // Start of the next day (exclusive)
 
         // Layout customization for the plot
@@ -277,8 +329,159 @@ function processData(parsedData, plot_minimum_times) {
         };
 
         // Create the plot using Plotly.js
-        Plotly.newPlot('plotDiv', lines, layout);
+        if(original){
+            Plotly.newPlot('plotDiv', lines, layout);
+        }
+        else{
+            Plotly.newPlot('plotDiv2', lines, layout);
+        }
     }
 
+function processDataD(parsedData, plot_minimum_times) {
+    const lines = [];
+    const vertical_shift = 5; // Assuming a vertical shift value
+    // Iterate over each row of data
+    const used_team_labels = new Set();
+    const used_ac_labels = new Set();
+    var mgt = true;
+    var mcct = true;
+
+    data.forEach(row => {
+        if (row.flight_idx === '') {
+                return; // Exit the loop
+        }
+        const color_to_plot_row_team = additional_palette[(row.team % additional_palette.length)];
+        const color_to_plot_row_actype = custom_palette[(row.ac_type % custom_palette.length)];
+        const aclabel = row.cancelled? `cancelled` : `acgroup_${row.ac_type}`;
+        const showLegendAc = !used_ac_labels.has(aclabel);
+        
+        // First trace for flight
+        const flight_trace = {
+            x: [row.start_time, row.finish_time],
+            y: [row.start_location, row.end_location],
+            mode: "lines+markers",
+            marker: { symbol: "circle" },
+            line: {
+                width: 2,
+                color: row.cancelled ? 'rgb(25,25,25)' : color_to_plot_row_actype
+            },
+            opacity: row.cancelled ? 0.5 : 1.0,
+            showlegend: showLegendAc,
+            name: row.cancelled ? `Cancelled flight id ${row.flight_idx}` : `Aircraft: ${row.ac_type}`,
+            legendgroup: aclabel
+        };
+        lines.push(flight_trace);
+        if (showLegendAc) {
+                used_ac_labels.add(aclabel);
+            }
+        if (!row.cancelled) {
+            // Second trace for team color
+            const teamlabel = `teamgroup_${row.team}`;
+            const showLegendTeam = !used_team_labels.has(teamlabel);
+            const flight_trace2 = {
+                x: [
+                    shiftDatetime(row.start_time, vertical_shift), 
+                    shiftDatetime(row.finish_time, vertical_shift)
+                ],
+                y: [row.start_location, row.end_location],
+                mode: "lines",
+                line: {
+                    width: 2,
+                    color: color_to_plot_row_team,
+                    dash: "20px,3px"
+                },
+                opacity: 1.0,
+                name: `Team: ${row.team}` ,
+                showlegend: showLegendTeam,
+                legendgroup: teamlabel
+            };
+            lines.push(flight_trace2);
+            if (showLegendTeam) {
+                used_team_labels.add(teamlabel);
+            }
+            if (plot_minimum_times) {
+                // Trace for minimum crew connection time
+                const trace1 = {
+                    x: [shiftDatetime(row.start_time, -instance.min_crew_conn_time), row.start_time],
+                    y: [row.start_location, row.start_location],
+                    mode: "lines",
+                    line: {
+                        width: 3,
+                        color: MCCT_colour
+                    },
+                    opacity: 0.7,
+                    showlegend: mcct,
+                    legendgroup: `MCCT`,
+                    name: "Minimal Crew Connection Times (MCCT)"
+                };
+                mcct = false;
+                lines.push(trace1);
+
+                // Trace for MGTW
+                const trace2 = {
+                    x: [shiftDatetime(row.start_time, -row.mgtw), row.start_time],
+                    y: [row.start_location - 0.05, row.start_location - 0.05],
+                    mode: "lines",
+                    line: {
+                        width: 4,
+                        color: MGT_colour
+                    },
+                    opacity: 0.5,
+                    showlegend: mgt,
+                    legendgroup: `MGT`,
+                    name: "Minimal Ground Times (MGT)"
+                };
+                mgt = false;
+                lines.push(trace2);
+            }
+        }
+    });
+    const startOfDay = new Date('2006-01-07T05:00:00'); // Start of the day
+    const endOfDay = new Date('2006-01-07T23:00:00');   // Start of the next day (exclusive)
+
+    // Layout configuration for Plotly
+    const layout = {
+        xaxis: {
+            title: "Time",
+            tickangle: 45,
+            showgrid: true,
+            gridcolor: "lightgray",
+            gridwidth: 1,
+            range: [startOfDay, endOfDay] 
+        },
+        yaxis: {
+            title: "Location",
+            tickvals: [...new Set([...data.map(d => d.start_location), ...data.map(d => d.end_location)])],
+            showgrid: true,
+            gridcolor: "lightgray",
+            gridwidth: 1
+        },
+        title: "Time-Space Diagram for model 2 output.",
+        legend: {
+            orientation: "v",
+            x: 1.2,
+            y: 1.4,
+            xanchor: "right"
+        },
+        shapes: [{
+            type: "line",
+            x0: instance.rp_start,
+            x1: instance.rp_start,
+            yref: "paper",
+            y0: 0,
+            y1: 1,
+            line: {
+                color: "red",
+                dash: "dot",
+                width: 2
+            }
+        }],
+        height: 600,
+        width: 1100
+    };
+
+    // Create the plot using Plotly.js
+    Plotly.newPlot('plotDiv3', lines, layout);
+}
     </script>
     </body>
