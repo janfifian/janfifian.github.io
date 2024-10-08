@@ -12,10 +12,21 @@
     <h1>Time-Space Diagram for aircrafts and crews for exemplary, simple instance before disruption</h1>
     <pre id="output"></pre>
     <div id="plotDiv" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+	<p>Let us take a closer look at this diagram. We have four kinds of objects here:
+	<ul>
+  <li><strong>Solid lines</strong> - these represent the scheduled flights. The color of the flight is representing the aircraft which is used to cover this flight leg. They are accompanied by...</li>
+  <li><strong>Dashed lines</strong> - they represent crews assigned to the particular flights. The color represents the id of the crew group covering that flight leg.</li>
+  <li><strong>Horizontal rectangles</strong></li> - these depict minimal times the crew (blue color) and the aircraft (brown color) have to stay on the ground between subsequent flights.
+</ul>
+It is worth pointing out that the diagrams are interactive. <strong>Double clicking </strong> on a particular line in the legend will isolate it, hiding all the other groups of lines. If one wants to hide or show particular family of flights, a <strong>single click</strong> on a chosen line family in the legends will accomplish this task. The plots also can be zoomed, either by clicking on a diagram and marking the desired area while holding the left mouse button or by the using menu which appears in the <strong>upper right corner</strong> of the visualisation widget.
+</p>
     <h1>Time-Space Diagram for aircrafts and crews for exemplary, simple instance after disruption:</h1>
     <div id="plotDiv2" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+<p>In the second diagram one can see a new kind of line appearing on the screen, which is a dashed line with more spacing between dashes. This corresponds to the originally scheduled timeline of the flight leg, which was delayed by some kind of disturbance. The segment depicting the predicted departure and arrival times is drawn as a solid line.</p>
+<p>It can be noticed that the disturbance introduced to the schedule made it infeasible - the departure of aircraft 3 and 1 now coincides with their arrival from the previous flights, which results in insufficient amount of ground time for crew and the aircraft.</p>
     <h1>Time-Space Diagram for aircrafts and crews after adjusting the schedule:</h1>
     <div id="plotDiv3" style="width:100%;height:600px;"></div> <!-- Placeholder for the Plotly plot -->
+	<p>So, one more thing which may appear on the schedule after making proper adjustments by our solver are gray lines. They represent the flight legs which have been cancelled for some reason - usually the crew has insufficient amount of duty time available and there is no reserve crew available at the airports along the way. Regardless of the reason, these flights will not be conducted.</p>
 	<div id="gd"></div>
     <h1>Time-Space Diagram for aircrafts and crews for more complicated instance before disruption</h1>
     <pre id="output"></pre>
