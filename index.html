@@ -73,6 +73,41 @@ It is worth pointing out that the diagrams are interactive. <strong>Double click
         const MGT_colour = 'rgb(150, 77, 0)';    // MGT Colour (0.59, 0.3, 0.0)
         const MCCT_colour = 'rgb(97, 140, 156)'; // MCCT Colour (0.38, 0.55, 0.61)
 
+		const location_map = {
+            1: 'CDG',
+            2: 'NCE',
+            3: 'ORY',
+            4: 'TLS',
+			5: 'AJA',
+			6: 'ETZ'
+        };
+		
+		const location_map2 = {
+            1: 'CDG',
+            2: 'NCE',
+            3: 'ORY',
+            4: 'TLS',
+			5: 'AJA',
+			6: 'BIA',
+			7: 'ETZ',
+			8: 'BES',
+			9: 'CFR',
+			10:'LEH',
+			11:'LDE',
+			12:'LIG',
+			13:'MLH',
+			14:'MRS',
+			15:'MPL',
+			16:'PUF',
+			17:'RNS',
+			18:'TLN',
+			19:'URO'
+        };
+        const tickvals1 = Object.keys(location_map).map(Number); // Extract keys as tick values
+        const ticktext1 = Object.values(location_map); 
+		
+		const tickvals2 = Object.keys(location_map2).map(Number); // Extract keys as tick values
+        const ticktext2 = Object.values(location_map2); 
         let data; 
 
 fetch(csvUrl)
@@ -86,8 +121,8 @@ fetch(csvUrl)
                     row.finish_time = dayjs(row.finish_time).toDate();  
                     return row;
                 });
-                processData(data, true, true, 'plotDiv');  
-                processData(data, true, false, 'plotDiv2'); 
+                processData(data, true, true, 'plotDiv', tickvals1, ticktext1);  
+                processData(data, true, false, 'plotDiv2', tickvals1, ticktext1); 
             },
             error: function(err) {
                 console.error("Error parsing CSV:", err);
@@ -109,7 +144,7 @@ fetch(csvUrl2)
                     row.cancelled = (row.cancelled==='true');
                     return row;
                 });
-                processDataD(data, true, 'plotDiv3');  // Example function to process the data
+                processDataD(data, true, 'plotDiv3', tickvals1, ticktext1);  // Example function to process the data
             },
             error: function(err) {
                 console.error("Error parsing CSV:", err);
@@ -129,8 +164,8 @@ fetch(csvUrl3)
                     row.finish_time = dayjs(row.finish_time).toDate();  
                     return row;
                 });
-                processData(data, true, true, 'plotDivPrime');  
-                processData(data, true, false, 'plotDiv2Prime'); 
+                processData(data, true, true, 'plotDivPrime', tickvals2, ticktext2);  
+                processData(data, true, false, 'plotDiv2Prime', tickvals2, ticktext2); 
             },
             error: function(err) {
                 console.error("Error parsing CSV:", err);
@@ -151,7 +186,7 @@ fetch(csvUrl4)
                     row.cancelled = (row.cancelled==='true');
                     return row;
                 });
-                processDataD(data, true, 'plotDiv3Prime');  // Example function to process the data
+                processDataD(data, true, 'plotDiv3Prime', tickvals2, ticktext2);  // Example function to process the data
             },
             error: function(err) {
                 console.error("Error parsing CSV:", err);
@@ -161,7 +196,7 @@ fetch(csvUrl4)
     .catch(err => console.error("Error fetching the CSV file:", err));
 
 // Example function to process the data outside Papa.parse()
-function processData(parsedData, plot_minimum_times, original, divvy) {
+function processData(parsedData, plot_minimum_times, original, divvy,tickvals,ticktext) {
             const lines = [];
             const total_annotations = [];
             const vertical_shift = 5; // Assuming a vertical shift value
@@ -355,7 +390,8 @@ function processData(parsedData, plot_minimum_times, original, divvy) {
             },
             yaxis: {
                 title: "Location",
-                tickvals: Array.from(new Set([...data.map(d => d.start_location), ...data.map(d => d.end_location)])),
+				tickvals: tickvals,
+                ticktext: ticktext,
                 showgrid: true,
                 gridcolor: "lightgray",
                 gridwidth: 1
@@ -388,7 +424,7 @@ function processData(parsedData, plot_minimum_times, original, divvy) {
 		Plotly.newPlot(divvy, lines, layout);
     }
 
-function processDataD(parsedData, plot_minimum_times, divvy) {
+function processDataD(parsedData, plot_minimum_times, divvy, tickvals, ticktext) {
     const lines = [];
     const vertical_shift = 5; // Assuming a vertical shift value
     // Iterate over each row of data
@@ -502,7 +538,8 @@ function processDataD(parsedData, plot_minimum_times, divvy) {
         },
         yaxis: {
             title: "Location",
-            tickvals: [...new Set([...data.map(d => d.start_location), ...data.map(d => d.end_location)])],
+			tickvals: tickvals,
+			ticktext: ticktext,
             showgrid: true,
             gridcolor: "lightgray",
             gridwidth: 1
