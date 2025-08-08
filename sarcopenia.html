@@ -1,55 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <title>SRTSI and Sarcopenia Screening</title>
+    <title>Sarcopenia Screening</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Optional: reuse existing site styles -->
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- MathJax configuration -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+      };
+    </script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+      async>
+    </script>
+
 </head>
 <body>
 
-    <main>
-        <h1>SRTSI and Sarcopenia Screening</h1>
+<main>
 
-        <ul>
-            <li>
-                <strong>NT-proBNP as a promising biomarker for sarcopenia:</strong>
-                A statistically significant elevation of NT-proBNP concentrations was observed in patients
-                with sarcopenia (1060.5 pg/ml) compared with the control group (572.8 pg/ml)
-                (p = 0.02), confirming an association between this marker and sarcopenia.
-            </li>
+    <h1>SRTSI and Sarcopenia Screening</h1>
 
-            <li>
-                <strong>Limitations of current screening:</strong>
-                The recommended SARC-F questionnaire shows low sensitivity
-                (0.50 in the overall study population; 0.0 in the subgroup without frailty),
-                underscoring its inefficiency in early identification of sarcopenia risk.
-            </li>
+    <p>
+        Considering the frequent coexistence of heart failure, glomerular filtration rate (GFR)
+        calculated using the Cockcroft–Gault formula, body mass index (BMI), and an empirically
+        determined correction coefficient <em>α</em>, the following index—RTSI
+        (<strong>Rapid Test for Sarcopenia Screening Indications</strong>)—was developed.
+        The RTSI is intended to support early identification of sarcopenia risk based on routine
+        laboratory measurements and basic anthropometric data.
+    </p>
 
-            <li>
-                <strong>SRTSI – a new index with high diagnostic accuracy:</strong>
-                A new simplified index, SRTSI (Simplified Rapid Test for Sarcopenia Screening Indications),
-                was developed based on NT-proBNP, creatinine concentration (Cr), and BMI.
-                SRTSI demonstrated very good diagnostic performance in the full cohort (AUC = 0.82),
-                reaching AUC = 0.87 in the subgroup without heart or kidney failure.
-            </li>
+    <h2>RTSI Formula</h2>
 
-            <li>
-                <strong>Higher clinical sensitivity:</strong>
-                The proposed cut-off of SRTSI ≥ 1 for the general population is characterized
-                by a sensitivity of 0.73 and a specificity of 0.75.
-            </li>
+    <div class="equation">
+    \[
+    \mathrm{RTSI} = \log\!\left(
+    \frac{\mathrm{NTproBNP}}{\mathrm{GFR}\cdot(\mathrm{BMI}-\alpha)^2}
+    \right)
+    \]
+    </div>
 
-            <li>
-                <strong>Practical simplicity:</strong>
-                SRTSI is an easy-to-use tool relying on widely accessible biochemical measurements
-                (NT-proBNP, creatinine, BMI), enabling rapid incorporation into general-practice (GP)
-                settings to accelerate sarcopenia diagnostics.
-            </li>
-        </ul>
-    </main>
+    <p><strong>Where:</strong></p>
+    <ul>
+        <li><strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
+        <li><strong>GFR</strong> – creatinine clearance calculated using the Cockcroft–Gault formula</li>
+        <li><strong>BMI</strong> – body mass index [kg/m²]</li>
+        <li><strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
+    </ul>
 
+<h2>Simplified Index (SRTSI)</h2>
+
+<p>
+    To simplify calculations, a predictive value analysis was performed for a modified RTSI
+    index calculated using serum creatinine, which is among the most routinely obtained
+    biochemical parameters in screening laboratory tests. The simplified index was defined as
+    SRTSI (<strong>Simplified Rapid Test for Sarcopenia Screening Indications</strong>).
+</p>
+
+<div class="equation">
+\[
+\mathrm{SRTSI} = \log\!\left(
+\frac{\mathrm{NTproBNP}}{\mathrm{K}\cdot(\mathrm{BMI}-\alpha)^2}
+\right)
+\]
+</div>
+
+<p><strong>Where:</strong></p>
+<ul>
+    <li><strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
+    <li><strong>K</strong> – serum creatinine [mg/dl]</li>
+    <li><strong>BMI</strong> – body mass index [kg/m²]</li>
+    <li><strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
+</ul>
+
+
+<h2>Index Calculator</h2>
+
+<div class="tabs">
+    <button type="button" class="tab active" data-mode="rtsi">RTSI (GFR-based)</button>
+    <button type="button" class="tab" data-mode="srtsi">SRTSI (Creatinine-based)</button>
+</div>
+
+    <form id="rtsi-form">
+        <label>
+            NT-proBNP (pg/ml):
+            <input type="number" id="ntprobnp" step="any" required>
+        </label>
+        <br><br>
+
+		<label class="input-rtsi">
+			GFR (ml/min):
+			<input type="number" id="gfr" step="any">
+		</label>
+
+		<label class="input-srtsi" style="display:none;">
+			Creatinine (mg/dl):
+			<input type="number" id="creatinine" step="any">
+		</label>
+
+		<br><br>
+
+
+        <label>
+            BMI (kg/m²):
+            <input type="number" id="bmi" step="any" required>
+        </label>
+        <br><br>
+
+        <label>
+            α (kg/m²):
+            <input type="number" id="alpha" step="any" value="15" required readonly disabled>
+        </label>
+        <br><br>
+<br>
+<label>
+    <input type="checkbox" id="cardiac">
+    Known cardiac disease (e.g. heart failure)
+</label>
+<br><br>
+
+        <button type="submit">Calculate RTSI</button>
+    </form>
+
+    <p id="result" style="font-weight: bold; margin-top: 1em;"></p>
+
+    <h2>Key Findings</h2>
+
+    <ul>
+        <li>
+            <strong>NT-proBNP as a promising biomarker for sarcopenia:</strong>
+            A statistically significant elevation of NT-proBNP concentrations was observed in patients
+            with sarcopenia (mean 1060.5 pg/ml) compared with the control group (572.8 pg/ml)
+            (p = 0.02), confirming an association between this marker and sarcopenia.
+        </li>
+
+        <li>
+            <strong>Limitations of current screening:</strong>
+            The recommended SARC-F questionnaire demonstrated low sensitivity
+            (0.50 in the overall study population; 0.0 in the subgroup without frailty),
+            highlighting its limited utility for early sarcopenia risk detection.
+        </li>
+
+        <li>
+            <strong>SRTSI – a novel index with high diagnostic accuracy:</strong>
+            The simplified SRTSI index, based on NT-proBNP, creatinine concentration, and BMI,
+            showed very good diagnostic performance in the entire cohort (AUC = 0.82),
+            reaching an AUC of 0.87 in patients without heart or kidney failure.
+        </li>
+
+        <li>
+            <strong>Improved clinical sensitivity:</strong>
+            A proposed cut-off value of SRTSI ≥ 1 for the general population yielded
+            a sensitivity of 0.73 and a specificity of 0.75.
+        </li>
+
+        <li>
+            <strong>Practical applicability:</strong>
+            Owing to its simplicity and reliance on widely available biochemical parameters,
+            SRTSI may be readily implemented in general practice to facilitate earlier
+            sarcopenia risk stratification.
+        </li>
+    </ul>
+<p style="font-size: 0.9em; color: #555;">
+    <em>
+        RTSI/SRTSI are screening tools intended to support clinical decision-making.
+		They were established in the works of Marcin Radkowski and Filip Turoboś.
+        We recommend that the final diagnosis of sarcopenia should be based on established diagnostic criteria.
+        </em>
+</p>
+</main>
+
+<footer>
+    <small>First published: 08 August 2025</small>
+</footer>
+
+<script>
+let mode = "rtsi";
+
+document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        mode = tab.dataset.mode;
+
+        document.querySelector(".input-rtsi").style.display =
+            mode === "rtsi" ? "block" : "none";
+        document.querySelector(".input-srtsi").style.display =
+            mode === "srtsi" ? "block" : "none";
+
+        // Clear previous result
+        document.getElementById("result").textContent = "";
+    });
+});
+
+document.getElementById("rtsi-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const ntprobnp = parseFloat(document.getElementById("ntprobnp").value);
+    const bmi = parseFloat(document.getElementById("bmi").value);
+    const alpha = parseFloat(document.getElementById("alpha").value);
+    const hasCardiacDisease = document.getElementById("cardiac").checked;
+
+    const gfr = parseFloat(document.getElementById("gfr").value);
+    const creatinine = parseFloat(document.getElementById("creatinine").value);
+
+    const resultEl = document.getElementById("result");
+
+    if (ntprobnp <= 0 || bmi <= alpha) {
+        resultEl.textContent =
+            "Invalid input: NT-proBNP must be positive and BMI must be greater than α.";
+        return;
+    }
+
+    let indexValue;
+
+    if (mode === "rtsi") {
+        if (!gfr || gfr <= 0) {
+            resultEl.textContent = "Please provide a valid GFR value.";
+            return;
+        }
+        indexValue = Math.log(ntprobnp / (gfr * Math.pow(bmi - alpha, 2)));
+    } else { // SRTSI
+        if (!creatinine || creatinine <= 0) {
+            resultEl.textContent = "Please provide a valid creatinine value.";
+            return;
+        }
+        indexValue = Math.log(ntprobnp / (creatinine * Math.pow(bmi - alpha, 2)));
+    }
+
+    let interpretation = "";
+
+    if (mode === "rtsi") {
+        // RTSI bands
+        if (indexValue < -4) {
+            interpretation = "Low risk of sarcopenia.";
+        } else if (indexValue < -3) {
+            interpretation = "Moderate risk of sarcopenia.";
+        } else if (indexValue < -2) {
+            interpretation = hasCardiacDisease
+                ? "Moderate risk of sarcopenia (interpret with caution due to cardiac disease)."
+                : "High risk of sarcopenia.";
+        } else {
+            interpretation = "High risk of sarcopenia.";
+        }
+    } else {
+        // SRTSI bands (shifted by 4)
+        if (indexValue < 0) {
+            interpretation = "Low risk of sarcopenia.";
+        } else if (indexValue < 1) {
+            interpretation = "Moderate risk of sarcopenia.";
+        } else {
+            interpretation = "High risk of sarcopenia.";
+        }
+    }
+
+    resultEl.innerHTML =
+        "<strong>Calculated " + (mode === "rtsi" ? "RTSI" : "SRTSI") + ":</strong> " +
+        indexValue.toFixed(3) +
+        "<br><strong>Interpretation:</strong> " + interpretation;
+});
+</script>
 </body>
 </html>
