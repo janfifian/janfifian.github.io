@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- Font Awesome Free -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <meta charset="UTF-8">
     <title>Sarcopenia Screening</title>
@@ -27,7 +32,6 @@
 <body>
 
 <main>
-
     <h1>SRTSI and Sarcopenia Screening</h1>
 
     <p>
@@ -50,12 +54,12 @@
     </div>
 
     <p><strong>Where:</strong></p>
-    <ul>
-        <li><strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
-        <li><strong>GFR</strong> – creatinine clearance calculated using the Cockcroft–Gault formula</li>
-        <li><strong>BMI</strong> – body mass index [kg/m²]</li>
-        <li><strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
-    </ul>
+<ul>
+    <li><i class="fa-solid fa-vial"></i> <strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
+    <li><i class="fa-solid fa-heart-pulse"></i> <strong>GFR</strong> – creatinine clearance calculated using Cockcroft–Gault</li>
+    <li><i class="fa-solid fa-scale-balanced"></i> <strong>BMI</strong> – body mass index [kg/m²]</li>
+    <li><i class="fa-solid fa-arrows-left-right"></i> <strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
+</ul>
 
 <h2>Simplified Index (SRTSI)</h2>
 
@@ -75,11 +79,12 @@
 </div>
 
 <p><strong>Where:</strong></p>
+
 <ul>
-    <li><strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
-    <li><strong>K</strong> – serum creatinine [mg/dl]</li>
-    <li><strong>BMI</strong> – body mass index [kg/m²]</li>
-    <li><strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
+    <li><i class="fa-solid fa-vial"></i> <strong>NTproBNP</strong> – NT-proBNP concentration [pg/ml]</li>
+    <li><i class="fa-solid fa-heart-pulse"></i> <strong>K</strong> – serum creatinine [mg/dl]</li>
+    <li><i class="fa-solid fa-scale-balanced"></i> <strong>BMI</strong> – body mass index [kg/m²]</li>
+    <li><i class="fa-solid fa-arrows-left-right"></i> <strong>α</strong> – correction coefficient; in this study α = 15 kg/m²</li>
 </ul>
 
 
@@ -89,8 +94,9 @@
     <button type="button" class="tab active" data-mode="rtsi">RTSI (GFR-based)</button>
     <button type="button" class="tab" data-mode="srtsi">SRTSI (Creatinine-based)</button>
 </div>
+<div class="calculator-card">
+<form id="rtsi-form">
 
-    <form id="rtsi-form">
         <label>
             NT-proBNP (pg/ml):
             <input type="number" id="ntprobnp" step="any" required>
@@ -130,6 +136,7 @@
 
         <button type="submit">Calculate RTSI</button>
     </form>
+</div>
 
     <p id="result" style="font-weight: bold; margin-top: 1em;"></p>
 
