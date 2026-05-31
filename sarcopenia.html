@@ -223,9 +223,14 @@ document.getElementById("rtsi-form").addEventListener("submit", function (e) {
 
     const resultEl = document.getElementById("result");
 
+    function showError(msg) {
+        resultEl.classList.remove("low", "moderate", "high");
+        resultEl.classList.add("high");
+        resultEl.textContent = msg;
+    }
+
     if (ntprobnp <= 0 || bmi <= alpha) {
-        resultEl.textContent =
-            "Invalid input: NT-proBNP must be positive and BMI must be greater than α.";
+        showError("Invalid input: NT-proBNP must be positive and BMI must be greater than α.");
         return;
     }
 
@@ -233,44 +238,57 @@ document.getElementById("rtsi-form").addEventListener("submit", function (e) {
 
     if (mode === "rtsi") {
         if (!gfr || gfr <= 0) {
-            resultEl.textContent = "Please provide a valid GFR value.";
+            showError("Please provide a valid GFR value.");
             return;
         }
         indexValue = Math.log(ntprobnp / (gfr * Math.pow(bmi - alpha, 2)));
     } else { // SRTSI
         if (!creatinine || creatinine <= 0) {
-            resultEl.textContent = "Please provide a valid creatinine value.";
+            showError("Please provide a valid creatinine value.");
             return;
         }
         indexValue = Math.log(ntprobnp / (creatinine * Math.pow(bmi - alpha, 2)));
     }
 
     let interpretation = "";
+    let riskClass = "";
 
     if (mode === "rtsi") {
         // RTSI bands
         if (indexValue < -4) {
             interpretation = "Low risk of sarcopenia.";
+            riskClass = "low";
         } else if (indexValue < -3) {
             interpretation = "Moderate risk of sarcopenia.";
+            riskClass = "moderate";
         } else if (indexValue < -2) {
-            interpretation = hasCardiacDisease
-                ? "Moderate risk of sarcopenia (interpret with caution due to cardiac disease)."
-                : "High risk of sarcopenia.";
+            if (hasCardiacDisease) {
+                interpretation = "Moderate risk of sarcopenia (interpret with caution due to cardiac disease).";
+                riskClass = "moderate";
+            } else {
+                interpretation = "High risk of sarcopenia.";
+                riskClass = "high";
+            }
         } else {
             interpretation = "High risk of sarcopenia.";
+            riskClass = "high";
         }
     } else {
         // SRTSI bands (shifted by 4)
         if (indexValue < 0) {
             interpretation = "Low risk of sarcopenia.";
+            riskClass = "low";
         } else if (indexValue < 1) {
             interpretation = "Moderate risk of sarcopenia.";
+            riskClass = "moderate";
         } else {
             interpretation = "High risk of sarcopenia.";
+            riskClass = "high";
         }
     }
 
+    resultEl.classList.remove("low", "moderate", "high");
+    resultEl.classList.add(riskClass);
     resultEl.innerHTML =
         "<strong>Calculated " + (mode === "rtsi" ? "RTSI" : "SRTSI") + ":</strong> " +
         indexValue.toFixed(3) +
